@@ -1,0 +1,11 @@
+## worker only needs a subset of requirements
+dynaconf
+sqlalchemy
+pydicom
+# task queue
+redis
+rq
+## db related
+asyncpg
+aiosqlite
+pydantic

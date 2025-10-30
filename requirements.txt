@@ -1,0 +1,25 @@
+fastapi
+fastapi_lifespan_manager
+webob
+dynaconf
+sqlalchemy
+uvicorn
+pydicom
+pillow
+numpy
+# task queue
+redis
+rq
+# cache
+theine==0.5.1
+## open-api to capabilities
+prance
+openapi-spec-validator
+## codecs
+pylibjpeg-openjpeg
+pylibjpeg-rle
+pyjpegls
+useful-types
+## db related
+asyncpg
+aiosqlite

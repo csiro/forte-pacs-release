@@ -1,0 +1,55 @@
+# These are requied configuration parameters.
+# The main components are services, which are plugins
+# for the respective fucntionality.
+# the data service is the main service and is required to have
+# a functional deployment.
+SERVER_BASE_URL = "http://localhost:8000/" ## the base url for the server
+
+
+
+WADO_PREFIX="wado"
+STOW_PREFIX="stow"
+QIDO_PREFIX="qido"
+
+DATA_SERVICE="fs_data_service" # we will use fs_data_service
+TASK_QUEUE_SERVICE = "rq_task_service" # rq for the task service (needed for query)
+QUERY_SERVICE = "sql_query_service" # sql for query service
+
+qido_queue_name="dicomweb-qido" # needed for query
+
+
+[CORS_SETTINGS]
+ALLOW_ORIGINS=["http://localhost:8090"]
+ALLOW_METHODS=["POST", "GET","OPTIONS"]
+ALLOW_HEADERS=["*"]
+
+[CODECS]
+CODEC_PATHS = ["/code/app/codecs"]
+DECODERS = ["pillow_decoder.pillowDecoder",
+            "turbojpeg_decoder.turboJpegDecoder",
+            "pylibjpeg_openjpeg_decoder.pylibOpenJpegDecoder",
+            "pylibjpeg_rle_decoder.pylibJpegRLEDecoder",
+            "pyjpegls_decoder.pyJpegLSDecoder",
+            "turbojpeg_decoder.turboJpegDecoder",
+            "zlib_decoder.zlibDecoder"]
+ENCODERS = ["turbojpeg_encoder.turboJpegEncoder",
+            "pylibjpeg_openjpeg_encoder.pylibOpenJpegEncoder",
+            "pylibjpeg_rle_encoder.pylibJpegRLEEncoder",
+            "turbojpeg_encoder.turboJpegEncoder",
+            "pyjpegls_encoder.pyJpegLSEncoder"
+            ]
+
+[FS_DATA_SERVICE]
+ROOT_DIR="/upload"
+
+[RQ_TASK_SERVICE]
+REDIS_URL="redis:6379"
+#REDIS_USERNAME=""
+#REDIS_PASSWORD=""
+
+
+[SQL_QUERY_SERVICE]
+SQL_URL= "postgres:5432/qido_db"
+SQL_DIALECT = "postgresql+asyncpg"
+SQL_USERNAME="qido_user"
+SQL_PASSWORD="S3cret"

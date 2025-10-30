@@ -1,0 +1,7 @@
+*pyc
+*pyo
+app/sql_app.db
+sql_app.db
+
+# Ignore dynaconf secret files
+.secrets.*
