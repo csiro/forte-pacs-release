@@ -7,7 +7,7 @@ from dynaconf import Dynaconf, Validator
 
 data_services = ["fs_data_service","mongodb_data_service"]
 task_queue_services = ["rq_task_service"]
-query_services = ["none","sql_query_service"]
+query_services = ["none","sql_query_service","fhir_query_service"]
 
 _validators = [
     Validator('data_service',must_exist=True),

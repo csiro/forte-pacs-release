@@ -53,3 +53,6 @@ SQL_URL= "postgres:5432/qido_db"
 SQL_DIALECT = "postgresql+asyncpg"
 SQL_USERNAME="qido_user"
 SQL_PASSWORD="S3cret"
+
+[FHIR_QUERY_SERVICE]
+FHIR_SERVER_URL="http://fhir:8080/fhir/"

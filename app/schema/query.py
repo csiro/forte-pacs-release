@@ -5,6 +5,7 @@ from enum import Enum
 from typing import List
 
 
+
 class MatchType(Enum):
     """
     Enumeration of different types of attribute matches that can be used in a query.
@@ -62,3 +63,4 @@ class QueryAttributeMatch:
         self.level = ie_level
         self.attr_name = attr_name
         self.value = value
+

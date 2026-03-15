@@ -9,3 +9,5 @@ rq
 asyncpg
 aiosqlite
 pydantic
+requests
+fhir.resources

@@ -1,0 +1,24 @@
+{
+ "name": "qido.pacs.forte",
+ "version" : "1.0.0",
+ "canonical" : "https://forte.com/fhir/imaging-study-qido-search-profile",
+ "url" : "https://forte.com/fhir/imaging-study-qido-search-profile",
+ "title" : "ImagingStudy Qido Search Profile",
+ "description": "Adds extension for common dicom attributes that can be searched.",
+ "fhirVersions" : [ "5.0.0" ],
+ "dependencies": {
+    "hl7.fhir.core": "5.0.0"
+ },
+ "keywords": [
+   "qido",
+   "dicomweb"
+ ],
+ "author": "Parnesh Raniga",
+ "maintainers": [
+   {
+     "name": "Parnesh Raniga",
+     "email": "parnesh.raniga@gmail.com"
+   }
+ ],
+ "license": "CC0-1.0"
+}

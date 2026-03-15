@@ -105,8 +105,8 @@ class DICOMQueryStudy(BaseModel):
         temp: Dict[str,Dict[str,Any]] = {}
         temp["0020000D"] = {"vr":"UI","Value":[self.study_instance_uid]} ## study instance uid
         temp["00080005"] = {"vr": "CS", "Value": self.specific_character_set}
-        temp["00080020"] = {"vr": "DA", "Value": [self.study_date.strftime("%Y%M%d")]}
-        temp["00080030"] = {"vr": "TM", "Value": [self.study_time.strftime("%Y%M%d")]}
+        temp["00080020"] = {"vr": "DA", "Value": [self.study_date.strftime("%Y%m%d")]}
+        temp["00080030"] = {"vr": "TM", "Value": [self.study_time.strftime("%Y%m%d")]}
         temp["00080056"] = {"vr":"CS", "Value":["ONLINE"]}
         temp["00080050"] = {"vr": "SH", "Value":[self.accession_number]}
         temp["00080061"]={"vr":"CS", "Value": self.modalities_in_study}
@@ -118,7 +118,7 @@ class DICOMQueryStudy(BaseModel):
         temp["00100010"]={"vr": "PN", "Value":[{"Alphabetic" :self.patient_name.to_dicom_string()}]}
         temp["00100020"]={"vr": "LO", "Value":[self.patient_id]}
         if self.patient_birth_date is not None:
-            temp["00100030"]={"vr": "DA", "Value":[self.patient_birth_date.strftime("%Y%M%d")]} ##
+            temp["00100030"]={"vr": "DA", "Value":[self.patient_birth_date.strftime("%Y%m%d")]} ##
         else:
             temp["00100030"]={"vr": "DA", "Value":[]}
 
@@ -187,7 +187,7 @@ class DICOMQuerySeries(BaseModel):
         temp["00200011"]={"vr": "IS", "Value":[self.series_number]}
         temp["00201209"]={"vr": "IS", "Value":[self.number_of_series_related_instances]}
 
-        if self.performed_procedure_step_start_date: temp["00400244"]={"vr": "DA" , "Value":[self.performed_procedure_step_start_date.strftime("%Y%M%d")]}
+        if self.performed_procedure_step_start_date: temp["00400244"]={"vr": "DA" , "Value":[self.performed_procedure_step_start_date.strftime("%Y%m%d")]}
         if self.performed_procedure_step_start_time: temp["00400245"]={"vr": "TM", "Value":[self.performed_procedure_step_start_time.strftime("%H%M%S")]}
 
         if self.scheduled_procedure_step_id and self.requested_procedure_id:

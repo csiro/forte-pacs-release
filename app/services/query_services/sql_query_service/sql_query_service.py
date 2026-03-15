@@ -51,7 +51,7 @@ DICOM_ATTR_MAP["InstanceNumber"] = "instance_number"
 
 
 
-def build_query(param:QueryAttributeMatch, fby_vars : Dict, f_vars:List, mapped_attr:str,study_attr:Any)->None:
+def build_query_param(param:QueryAttributeMatch, fby_vars : Dict, f_vars:List, mapped_attr:str,study_attr:Any)->None:
     """
         Build SQL query conditions based on DICOM query parameters.
 
@@ -198,12 +198,16 @@ class SQLQueryService(QueryService):
                     study_attr = getattr(SQLDICOMStudy,mapped_attr)
 
                 elif mapped_attr == "modalities_in_study":
-                    f_vars.append(SQLDICOMStudy.series.any(SQLDICOMSeries.modality.in_([param.value])))
+                    if isinstance(param.value,List):
+                        f_vars.append(SQLDICOMStudy.series.any(SQLDICOMSeries.modality.in_(param.value)))
+                    else:
+                        f_vars.append(SQLDICOMStudy.series.any(SQLDICOMSeries.modality.in_([param.value])))
+
                     continue
                 else:
                     continue
 
-                build_query(param,fby_vars,f_vars,mapped_attr,study_attr)
+                build_query_param(param,fby_vars,f_vars,mapped_attr,study_attr)
 
             print (fby_vars)
             for ff in f_vars:
@@ -212,7 +216,7 @@ class SQLQueryService(QueryService):
             print (temp_q)
             res = (await db_ses.execute(temp_q)).unique().scalars().all()
 
-            # from these,
+            # Convert results to schema objects
             ret =  [await x.to_schema_obj() for x in res]
 
             return ret
@@ -236,6 +240,9 @@ class SQLQueryService(QueryService):
             Returns:
                 List[DICOMQuerySeries]: List of matching series objects.
         """
+
+        if study_uid:
+            search_params.append(QueryAttributeMatch(MatchType.single_value,QueryLevel.series,"StudyInstanceUID",study_uid))
 
         async with self.session_local() as db_ses:
             # map the parameters to local model
@@ -261,12 +268,7 @@ class SQLQueryService(QueryService):
                     continue
 
 
-                build_query(param,fby_vars,f_vars,mapped_attr,study_attr)
-
-
-            if study_uid:
-                study_attr = getattr(SQLDICOMSeries,mapped_attr)
-                fby_vars[mapped_attr]=study_uid
+                build_query_param(param,fby_vars,f_vars,mapped_attr,study_attr)
 
             temp_q = select(SQLDICOMSeries).filter_by(**fby_vars).where(and_(*f_vars)).limit(limit).offset(offset)
 
@@ -293,7 +295,10 @@ class SQLQueryService(QueryService):
             Returns:
                 List[DICOMQueryInstance]: List of matching instance objects.
         """
-
+        if study_uid:
+            search_params.append(QueryAttributeMatch(MatchType.single_value,QueryLevel.instance,"StudyInstanceUID",study_uid))
+        if series_uid:
+            search_params.append(QueryAttributeMatch(MatchType.single_value,QueryLevel.instance,"SeriesInstanceUID",series_uid))
         async with self.session_local() as db_ses:
 
             # map the parameters to local model
@@ -315,8 +320,11 @@ class SQLQueryService(QueryService):
                 else:
                     study_attr = getattr(SQLDICOMInstance,mapped_attr)
 
-                build_query(param,fby_vars,f_vars,mapped_attr,study_attr)
+                build_query_param(param,fby_vars,f_vars,mapped_attr,study_attr)
 
+            if study_uid:
+                study_attr = getattr(SQLDICOMSeries,mapped_attr)
+                fby_vars[mapped_attr]=study_uid
 
             temp_q = select(SQLDICOMInstance).filter_by(**fby_vars).where(and_(*f_vars)).limit(limit).offset(offset)
 

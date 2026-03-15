@@ -4,7 +4,7 @@ Abstract API for all query services. A query service is responsible for storing 
 from typing import List, Dict
 from abc import ABC, abstractmethod
 from app.schema.dicom_query import DICOMQueryStudy, DICOMQuerySeries, DICOMQueryInstance
-from app.schema.query import MatchType,QueryLevel, QueryAttributeMatch
+from app.schema.query import QueryAttributeMatch
 
 
 class QueryService(ABC):

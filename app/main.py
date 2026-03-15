@@ -39,11 +39,15 @@ from app.api.dcmweb.qido.qido_api_ni import qido_router_ni
 from app.services.api.data_service import DataService
 from app.services.data_services.fs_data_service import FSDataService
 from app.services.query_services.sql_query_service import SQLQueryService
+from app.services.query_services.fhir_query_service import FHIRQueryService
+
 from app.services.task_queue_services.rq_task_queue_service import RQTaskQueueService
 
 from app.codecs.codec_registry import CodecRegistry
 
 from app.callbacks.dcm_qido_meta_data import update_meta_data_qido
+from app.callbacks.dcm_qido_meta_data_fhir import update_meta_data_qido_fhir
+
 from app.config import settings
 from app.utils.gen_capabilities_openapi import build_capabilities_xml, build_capabilities_json
 from app.codecs.import_utils import import_decoder,import_encoder
@@ -149,8 +153,25 @@ async def setup_query_service()->AsyncIterator:
         yield {"query_service":query_service}
         await query_service.dispose()
 
+    elif settings.QUERY_SERVICE.upper() == "FHIR_QUERY_SERVICE":
+        fhir_server_url = None
+        try:
+            fhir_server_url =settings.FHIR_QUERY_SERVICE['FHIR_SERVER_URL']
+        except KeyError as e:
+            logger.error(" FHIR server url required for fhir query service is missing. The system requires this to function")
+            raise Exception("FHIR server url required for fhir query service is missing. The system requires this to function")
+
+
+        query_service = FHIRQueryService(fhir_server_url)
+        await query_service.init_service()
+
+        yield {"query_service":query_service}
+        await query_service.dispose()
+
     elif settings.QUERY_SERVICE.upper() == "NONE":
         yield {"query_service":None}
+    
+    
 
 @manager.add
 async def setup_base_directory() -> AsyncIterator:
@@ -188,9 +209,10 @@ async def setup_stow_callbacks()->AsyncIterator:
     """
         Setup callbacks
     """
-
-    yield {"stow_callbacks" : [update_meta_data_qido]}
-
+    if settings.QUERY_SERVICE.upper() == "SQL_QUERY_SERVICE":
+        yield {"stow_callbacks" : [update_meta_data_qido]}
+    elif settings.QUERY_SERVICE.upper() == "FHIR_QUERY_SERVICE":
+        yield {"stow_callbacks" : [update_meta_data_qido_fhir]}
 
 @manager.add
 async def setup_task_queue()->AsyncIterator:
@@ -317,3 +339,4 @@ if settings.query_service != "none":
     app.include_router(qido_router,prefix="/"+settings.qido_prefix)
 else:
     app.include_router(qido_router_ni,prefix="/"+settings.qido_prefix)
+

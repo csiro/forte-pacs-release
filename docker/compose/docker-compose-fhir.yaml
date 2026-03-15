@@ -1,0 +1,126 @@
+version: "3.91"
+services:
+  app:
+    build:
+      context: ${REPO_DIR}
+      dockerfile: ${REPO_DIR}/docker/forte-pacs/Dockerfile
+    image: forte/forte-pacs:1.0
+    stop_signal: SIGINT
+    environment:
+      - TZ=${TIMEZONE}
+      - redis_url=${REDIS_URL}
+      - REDIS_URL=${REDIS_URL}
+      - UVICORN_TIMEOUT=${UVICORN_TIMEOUT}
+      - LOGS_DIR=/logs/web_app
+      - DYNACONF_QUERY_SERVICE=fhir_query_service
+    volumes:
+      - logsDir:/logs/web_app
+      - configDir:/code/config
+      - uploadDir:/upload
+    depends_on:
+      postgres:
+          condition: service_healthy
+      redis:
+          condition: service_started
+      ig_uploader:
+          condition: service_completed_successfully 
+    ports:
+      - "${APP_PORTS}"
+
+  worker:
+    build:
+      context: ${REPO_DIR}
+      dockerfile: ${REPO_DIR}/docker/rq-worker/Dockerfile
+    image: forte/rq-worker:1.0
+    environment:
+      - redis_url=${REDIS_URL}
+      - TZ=${TIMEZONE}
+      - qido_queue_name=${QIDO_QUEUE_NAME}
+    depends_on:
+      redis:
+          condition: service_started
+      app:
+          condition: service_started
+    volumes:
+      - configDir:/code/config
+
+  redis:
+    hostname: redis
+    image: redis:7.0.8-bullseye
+    ports:
+      - ${REDIS_PORT}
+
+  postgres:
+    hostname: postgres
+    image: postgres:17.0-bullseye
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - type: bind
+        source: ${DB_DIR_LOCAL}
+        target: /var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=${TIMEZONE}
+
+  fhir:
+    hostname: fhir
+    image: hapiproject/hapi:latest 
+    ports:
+      - "8085:8080"
+    environment:
+      - TZ=${TIMEZONE}
+      - hapi.fhir.ig_runtime_upload_enabled=true
+      - hapi.fhir.fhir_version=R5
+      - spring.datasource.url=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      - spring.datasource.username=${POSTGRES_USER}
+      - spring.datasource.password=${POSTGRES_PASSWORD}
+      - spring.datasource.driverClassName=org.postgresql.Driver
+      - spring.jpa.properties.hibernate.dialect=ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
+
+    volumes:
+      - fhirData:/data/hapi
+    depends_on:
+      postgres:
+          condition: service_healthy
+
+  ig_uploader:
+    image: richardjkendall/curl-bash:latest
+    volumes:
+      - ${IG_PACKAGE_DIR:-./ig-packages}:/ig-packages
+
+    command: /bin/bash -c 'ig-packages/install.sh'
+
+
+volumes:
+  uploadDir:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${UPLOAD_DIR_LOCAL}
+      o: bind
+
+  configDir:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${CONFIG_DIR_LOCAL}
+      o: bind
+
+  logsDir:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${LOGS_DIR_LOCAL}
+      o: bind
+
+  fhirData:
+    driver: local
